@@ -1,0 +1,192 @@
+package com.guideconnect.controller;
+
+import com.guideconnect.model.TourListing;
+import com.guideconnect.model.User;
+import com.guideconnect.service.BookingService;
+import com.guideconnect.service.TourService;
+import com.guideconnect.service.UserService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * Controller for guide-facing pages.
+ *
+ * <p>Provides the guide dashboard, profile management, tour CRUD operations,
+ * and incoming booking request views. All endpoints require an authenticated
+ * user with the guide role.</p>
+ */
+@Controller
+@RequestMapping("/guide")
+public class GuideController {
+
+    private final UserService userService;
+    private final TourService tourService;
+    private final BookingService bookingService;
+
+    /**
+     * Constructs a {@code GuideController} with the required service dependencies.
+     *
+     * @param userService    the service for user lookup and profile updates
+     * @param tourService    the service for tour CRUD operations
+     * @param bookingService the service for booking queries
+     */
+    public GuideController(UserService userService,
+                           TourService tourService,
+                           BookingService bookingService) {
+        this.userService = userService;
+        this.tourService = tourService;
+        this.bookingService = bookingService;
+    }
+
+    /**
+     * Displays the guide dashboard.
+     *
+     * <p>Populates the model with the guide's tours and booking information.</p>
+     *
+     * @param principal the currently authenticated user's security principal
+     * @param model     the Thymeleaf model
+     * @return the guide dashboard view name
+     */
+    @GetMapping("/dashboard")
+    public String dashboard(@AuthenticationPrincipal UserDetails principal, Model model) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        model.addAttribute("user", user);
+        model.addAttribute("tours", tourService.findByGuide(user.getId()));
+        model.addAttribute("bookings", bookingService.findByGuide(user.getId(), PageRequest.of(0, 10)));
+        return "guide/dashboard";
+    }
+
+    /**
+     * Displays the guide profile page.
+     *
+     * @param principal the currently authenticated user's security principal
+     * @param model     the Thymeleaf model
+     * @return the guide profile view name
+     */
+    @GetMapping("/profile")
+    public String showProfile(@AuthenticationPrincipal UserDetails principal, Model model) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        model.addAttribute("user", user);
+        return "guide/profile";
+    }
+
+    /**
+     * Updates the guide's profile information.
+     *
+     * @param principal   the currently authenticated user's security principal
+     * @param updatedUser the updated profile data from the form
+     * @return a redirect to the guide profile page
+     */
+    @PostMapping("/profile")
+    public String updateProfile(@AuthenticationPrincipal UserDetails principal, User updatedUser) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        userService.updateGuideProfile(user.getId(), updatedUser.getDisplayName(),
+                updatedUser.getBiography(), updatedUser.getLanguagesSpoken());
+        return "redirect:/guide/profile";
+    }
+
+    /**
+     * Displays the tour creation form.
+     *
+     * <p>Adds an empty {@link TourListing} object to the model so the Thymeleaf form
+     * can bind to it.</p>
+     *
+     * @param model the Thymeleaf model
+     * @return the tour form view name
+     */
+    @GetMapping("/tours/new")
+    public String showNewTourForm(Model model) {
+        model.addAttribute("tour", new TourListing());
+        return "guide/tour-form";
+    }
+
+    /**
+     * Creates a new tour for the authenticated guide.
+     *
+     * @param principal the currently authenticated user's security principal
+     * @param tour      the tour data from the form
+     * @return a redirect to the guide dashboard
+     */
+    @PostMapping("/tours")
+    public String createTour(@AuthenticationPrincipal UserDetails principal, TourListing tour) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        tourService.createTour(tour, user.getId());
+        return "redirect:/guide/dashboard";
+    }
+
+    /**
+     * Displays the tour edit form pre-populated with existing tour data.
+     *
+     * @param id    the ID of the tour to edit
+     * @param model the Thymeleaf model
+     * @return the tour form view name
+     */
+    @GetMapping("/tours/{id}/edit")
+    public String showEditTourForm(@PathVariable Long id, Model model) {
+        TourListing tour = tourService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tour not found with id: " + id));
+        model.addAttribute("tour", tour);
+        return "guide/tour-form";
+    }
+
+    /**
+     * Updates an existing tour.
+     *
+     * @param id          the ID of the tour to update
+     * @param principal   the currently authenticated user's security principal
+     * @param updatedTour the updated tour data from the form
+     * @return a redirect to the guide dashboard
+     */
+    @PostMapping("/tours/{id}")
+    public String updateTour(@PathVariable Long id,
+                             @AuthenticationPrincipal UserDetails principal,
+                             TourListing updatedTour) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        tourService.updateTour(id, updatedTour, user.getId());
+        return "redirect:/guide/dashboard";
+    }
+
+    /**
+     * Deletes a tour by its ID.
+     *
+     * @param id        the ID of the tour to delete
+     * @param principal the currently authenticated user's security principal
+     * @return a redirect to the guide dashboard
+     */
+    @PostMapping("/tours/{id}/delete")
+    public String deleteTour(@PathVariable Long id,
+                             @AuthenticationPrincipal UserDetails principal) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        tourService.deleteTour(id, user.getId());
+        return "redirect:/guide/dashboard";
+    }
+
+    /**
+     * Displays incoming booking requests for the guide's tours.
+     *
+     * @param principal the currently authenticated user's security principal
+     * @param model     the Thymeleaf model
+     * @return the guide requests view name
+     */
+    @GetMapping("/requests")
+    public String showRequests(@AuthenticationPrincipal UserDetails principal, Model model) {
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        model.addAttribute("user", user);
+        model.addAttribute("requests", bookingService.findByGuide(user.getId(), PageRequest.of(0, 50)));
+        return "guide/requests";
+    }
+}
