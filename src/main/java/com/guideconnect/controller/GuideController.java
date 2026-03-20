@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.data.domain.Sort;
 
 /**
  * Controller for guide-facing pages.
@@ -186,7 +187,8 @@ public class GuideController {
         User user = userService.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         model.addAttribute("user", user);
-        model.addAttribute("requests", bookingService.findByGuide(user.getId(), PageRequest.of(0, 50)));
+        model.addAttribute("requests", bookingService.findByGuide(user.getId(),
+                PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "createdAt"))));
         return "guide/requests";
     }
 }
