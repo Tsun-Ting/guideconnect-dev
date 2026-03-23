@@ -68,7 +68,7 @@
                         </div>
 
                         <div class="col-md-4 d-flex align-items-center justify-content-end"
-                             th:if="${request.status.name() == 'REQUESTED'}">
+                             th:if="${request.status.name() == 'REQUESTED' or request.status.name() == 'NEGOTIATING'}">
                             <div class="btn-group-vertical w-100" style="max-width: 200px;">
                                 <form th:action="@{/bookings/{id}/accept(id=${request.id})}" method="post">
                                     <button type="submit" class="btn btn-success w-100 mb-1">
@@ -80,11 +80,16 @@
                                         <i class="bi bi-x-lg"></i> Reject
                                     </button>
                                 </form>
-                                <form th:action="@{/bookings/{id}/negotiate(id=${request.id})}" method="post">
-                                    <button type="submit" class="btn btn-outline-warning w-100">
-                                        <i class="bi bi-chat-text"></i> Negotiate
-                                    </button>
-                                </form>
+                                <!-- Only show Negotiate if status is REQUESTED -->
+                                <a th:if="${request.status.name() == 'REQUESTED'}"
+                                   th:href="@{/messages/booking/{id}(id=${request.id})}"
+                                   class="btn btn-outline-warning w-100 mb-1">
+                                    <i class="bi bi-chat-text"></i> Negotiate
+                                </a>
+                                <a th:href="@{/messages/booking/{id}(id=${request.id})}"
+                                   class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-chat-left-text"></i> Messages
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,8 @@
 package com.guideconnect.controller;
 
 import com.guideconnect.model.TourListing;
+import com.guideconnect.model.BookingStatus;
+import java.util.List;
 import com.guideconnect.model.User;
 import com.guideconnect.service.BookingService;
 import com.guideconnect.service.TourService;
@@ -61,7 +63,10 @@ public class GuideController {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         model.addAttribute("user", user);
         model.addAttribute("tours", tourService.findByGuide(user.getId()));
-        model.addAttribute("bookings", bookingService.findByGuide(user.getId(), PageRequest.of(0, 10)));
+        model.addAttribute("bookings", bookingService.findByGuideAndStatusIn(
+                user.getId(),
+                List.of(BookingStatus.REQUESTED, BookingStatus.NEGOTIATING),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))));
         return "guide/dashboard";
     }
 
@@ -92,7 +97,7 @@ public class GuideController {
         User user = userService.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         userService.updateGuideProfile(user.getId(), updatedUser.getDisplayName(),
-                updatedUser.getBiography(), updatedUser.getLanguagesSpoken());
+                updatedUser.getBiography(), updatedUser.getLanguagesSpoken(), updatedUser.getGuidePricing());
         return "redirect:/guide/profile";
     }
 
@@ -187,7 +192,9 @@ public class GuideController {
         User user = userService.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         model.addAttribute("user", user);
-        model.addAttribute("requests", bookingService.findByGuide(user.getId(),
+        model.addAttribute("requests", bookingService.findByGuideAndStatusIn(
+                user.getId(),
+                List.of(BookingStatus.REQUESTED, BookingStatus.NEGOTIATING),
                 PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "createdAt"))));
         return "guide/requests";
     }

@@ -32,8 +32,10 @@
             <div class="col-md-3">
                 <div class="card text-center shadow-sm border-0">
                     <div class="card-body">
-                        <div class="display-6 text-warning fw-bold" th:text="${bookings != null ? bookings.totalElements : 0}">0</div>
-                        <p class="text-muted mb-0">Pending Requests</p>
+                        <a th:href="@{/guide/requests}" class="text-decoration-none">
+                            <div class="display-6 text-warning fw-bold" th:text="${bookings != null ? bookings.totalElements : 0}">0</div>
+                            <p class="text-muted mb-0">Pending Requests ↗</p>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -65,15 +67,7 @@
                         data-bs-target="#tours-pane" type="button" role="tab"
                         aria-controls="tours-pane" aria-selected="true">My Tours</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="requests-tab" data-bs-toggle="tab"
-                        data-bs-target="#requests-pane" type="button" role="tab"
-                        aria-controls="requests-pane" aria-selected="false">
-                    Incoming Requests
-                    <span class="badge bg-danger ms-1" th:if="${bookings != null and bookings.totalElements > 0}"
-                          th:text="${bookings.totalElements}">3</span>
-                </button>
-            </li>
+
         </ul>
 
         <div class="tab-content">
@@ -134,53 +128,7 @@
             </div>
 
             <!-- Incoming Requests Tab -->
-            <div class="tab-pane fade" id="requests-pane" role="tabpanel" aria-labelledby="requests-tab">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <div th:if="${bookings != null and bookings.totalElements > 0}">
-                            <div class="border rounded p-3 mb-3" th:each="request : ${bookings.content}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">
-                                            <span th:text="${request.tourist.displayName}">Tourist Name</span>
-                                            <small class="text-muted">requested</small>
-                                            <strong th:text="${request.tour.title}">Tour Name</strong>
-                                        </h6>
-                                        <p class="text-muted mb-1">
-                                            <i class="bi bi-calendar"></i> <span th:text="${request.requestedDate}">2026-04-01</span>
-                                            &middot;
-                                            <i class="bi bi-people"></i> <span th:text="${request.groupSize}">2</span> people
-                                        </p>
-                                        <p class="mb-0" th:if="${request.message}" th:text="${request.message}">
-                                            We'd love a food-focused tour!
-                                        </p>
-                                    </div>
-                                    <div class="btn-group">
-                                        <form th:action="@{/bookings/{id}/accept(id=${request.id})}" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success me-1">
-                                                <i class="bi bi-check-lg"></i> Accept
-                                            </button>
-                                        </form>
-                                        <form th:action="@{/bookings/{id}/reject(id=${request.id})}" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger me-1">
-                                                <i class="bi bi-x-lg"></i> Reject
-                                            </button>
-                                        </form>
-                                        <a th:href="@{/bookings/{id}/negotiate(id=${request.id})}"
-                                           class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-chat-text"></i> Negotiate
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center text-muted py-4" th:if="${bookings == null or bookings.totalElements == 0}">
-                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
-                            <p>No pending requests at the moment.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
     </div>

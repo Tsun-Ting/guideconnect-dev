@@ -109,8 +109,13 @@
                     <!-- Tourist actions: CONFIRMED status -->
                     <div th:if="${booking.status.name() == 'CONFIRMED'}" sec:authorize="hasRole('TOURIST')">
                         <div class="d-flex gap-2 flex-wrap">
-                            <a th:href="@{/bookings/{id}/pay(id=${booking.id})}" class="btn btn-success">
-                                <i class="bi bi-credit-card"></i> Pay Now
+                            <form th:if="${transaction == null}" th:action="@{/bookings/{id}/pay(id=${booking.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-credit-card"></i> Pay Now
+                                </button>
+                            </form>
+                            <a th:if="${transaction != null}" th:href="@{/bookings/{id}/payment(id=${booking.id})}" class="btn btn-success">
+                                <i class="bi bi-receipt"></i> View Payment
                             </a>
                             <form th:action="@{/bookings/{id}/cancel(id=${booking.id})}" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-outline-danger">
@@ -120,14 +125,27 @@
                         </div>
                     </div>
 
-                    <!-- Complete Tour: CONFIRMED + date passed -->
-                    <div th:if="${booking.status.name() == 'CONFIRMED' and canComplete}">
-                        <form th:action="@{/bookings/{id}/complete(id=${booking.id})}" method="post">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Complete Tour
-                            </button>
-                        </form>
+                    <!-- Guide actions: CONFIRMED status -->
+                    <div th:if="${booking.status.name() == 'CONFIRMED'}" sec:authorize="hasRole('GUIDE')">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form th:if="${canComplete}" th:action="@{/bookings/{id}/complete(id=${booking.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Mark as Completed
+                                </button>
+                            </form>
+                            <form th:action="@{/bookings/{id}/cancel(id=${booking.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i> Cancel Booking
+                                </button>
+                            </form>
+                        </div>
                     </div>
+
+                    <p class="text-muted mt-3 mb-0"
+                       th:if="${booking.status.name() == 'CONFIRMED' and !canComplete}"
+                       sec:authorize="hasRole('GUIDE')">
+                        This booking can be marked completed after the scheduled date has passed.
+                    </p>
 
                     <!-- Leave Review: COMPLETED + not yet reviewed -->
                     <div th:if="${booking.status.name() == 'COMPLETED' and !hasReviewed}">

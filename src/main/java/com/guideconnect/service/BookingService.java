@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Service layer for booking lifecycle management.
@@ -268,4 +269,10 @@ public class BookingService {
         }
         booking.setStatus(newStatus);
     }
+    public Page<Booking> findByGuideAndStatusIn(Long guideId, List<BookingStatus> statuses, Pageable pageable) {
+        User guide = userRepository.findById(guideId)
+                .orElseThrow(() -> new IllegalArgumentException("Guide not found"));
+        return bookingRepository.findByGuideAndStatusIn(guide, statuses, pageable);
+    }
+
 }

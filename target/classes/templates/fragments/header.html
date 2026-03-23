@@ -45,9 +45,6 @@
                     <a class="nav-link" th:href="@{/guide/dashboard}">Dashboard</a>
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('GUIDE')">
-                    <a class="nav-link" th:href="@{/guide/tours}">My Tours</a>
-                </li>
-                <li class="nav-item" sec:authorize="hasRole('GUIDE')">
                     <a class="nav-link" th:href="@{/guide/requests}">Requests</a>
                 </li>
                 <li class="nav-item" sec:authorize="hasRole('GUIDE')">
