@@ -193,7 +193,9 @@ public class BookingController {
     @PostMapping("/{id}/complete")
     public String completeBooking(@PathVariable Long id,
                                   @AuthenticationPrincipal UserDetails principal) {
-        bookingService.completeBooking(id);
+        User user = userService.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        bookingService.completeBooking(id, user.getId());
         return "redirect:/bookings/" + id;
     }
 

@@ -10,7 +10,7 @@
 <div class="container my-4">
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <h2 class="mb-4">Leave a Review</h2>
+            <h2 class="mb-4" th:text="${guideReviewingTourist ? 'Rate Tourist' : 'Leave a Review'}">Leave a Review</h2>
 
             <!-- Booking Summary -->
             <div class="card shadow-sm mb-4">
@@ -60,7 +60,7 @@
                         </div>
 
                         <!-- Written Review -->
-                        <div class="mb-4">
+                        <div class="mb-4" th:if="${!guideReviewingTourist}">
                             <label for="comment" class="form-label fw-bold">Written Review</label>
                             <textarea class="form-control" id="comment" th:field="*{comment}"
                                       rows="5" maxlength="500"
@@ -71,6 +71,10 @@
                                     <span id="charCount">0</span>/500 characters
                                 </small>
                             </div>
+                        </div>
+
+                        <div class="mb-4 text-muted" th:if="${guideReviewingTourist}">
+                            Your rating will help keep the platform safe and reliable for guides.
                         </div>
 
                         <!-- Submit -->
@@ -109,7 +113,11 @@
 
     function updateCharCount() {
         const textarea = document.getElementById('comment');
-        document.getElementById('charCount').textContent = textarea.value.length;
+        const charCount = document.getElementById('charCount');
+        if (!textarea || !charCount) {
+            return;
+        }
+        charCount.textContent = textarea.value.length;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
